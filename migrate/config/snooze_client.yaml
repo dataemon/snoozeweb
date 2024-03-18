@@ -1,0 +1,10 @@
+---
+server: http://${SNOOZE_SERVER}:80
+app_name: snooze_client
+auth_method: local
+credentials:
+  username:
+  password:
+token_to_disk: false
+ca_bundle:
+timeout: 5

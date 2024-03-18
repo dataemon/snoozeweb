@@ -1,0 +1,2 @@
+---
+server: http://${SNOOZE_SERVER}:80

@@ -1,0 +1,30 @@
+---
+#################
+# General options
+#################
+
+# `listening_address`: Address to listen to.
+listening_address: 0.0.0.0
+
+# `listening_port`: Port to listen to. Please note than when choosing a port
+# lower than 1024 (like 163 for instance), you will need to run the process as root.
+listening_port: 1163
+
+##############
+# SNMP options
+##############
+
+# `mib_dirs`: An array of directory containing MIB files. All MIB file in these directories will
+# be loaded and used to provide MIB names instead of OIDs when creating records.
+# /etc/snooze/snmptrap.yaml
+mib_dirs:
+   # - /usr/share/snmp/mibs
+   # - /var/lib/snmp/mibs/
+   - /var/lib/mibs/
+
+################
+# Worker options
+################
+
+# `send_workers`: Number of threads to use for sending to snooze server.
+send_workers: 4

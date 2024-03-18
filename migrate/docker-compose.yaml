@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  snooze_migrate:
+    image: nexus.privatehost.com:8444/orgname/snoozeweb/snooze_migrate:latest
+    restart: always
+    command: python main.py # comment to use jupyterlab
+    ports:
+      - 8888:8888
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/hosts:/etc/hosts:ro
+      - /opt/snooze_migrate/notebook:/backend/notebook:rw
+      - /opt/snooze_migrate/config:/backend/config:rw
+    environment:
+      - SNOOZE_CLIENT_CONFIG_FILE=/backend/config/snooze_client.yaml
+
+networks:
+  snoozenw:

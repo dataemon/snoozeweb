@@ -1,0 +1,230 @@
+version: "3"
+
+services:
+  lb:
+    image: nexus.privatehost.com:8442/nginx
+    volumes:
+      # - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/hosts:/etc/hosts:ro
+    ports:
+      - 80:80
+      - 1514:1514/tcp
+      - 1514:1514/udp
+      - 1163:1163/tcp
+      - 1163:1163/udp
+    networks:
+      - snoozenw
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+  snooze1:
+    image: nexus.privatehost.com:8442/snoozeweb/snooze
+    environment:
+      - DATABASE_URL=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/snooze?replicaSet=rs0
+      - SNOOZE_CLUSTER=snooze1:5200,snooze2:5200,snooze3:5200
+    ports:
+      - "5201:5200"
+    networks:
+      - snoozenw
+    depends_on:
+      - mongo1
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST1}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/hosts:/etc/hosts:ro
+      - /opt/snooze/config:/etc/snooze/server:rw
+      - /opt/snooze/log:/var/log/snooze/server:rw
+  snooze2:
+    image: nexus.privatehost.com:8442/snoozeweb/snooze
+    environment:
+      - DATABASE_URL=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/snooze?replicaSet=rs0
+      - SNOOZE_CLUSTER=snooze1:5200,snooze2:5200,snooze3:5200
+    ports:
+      - "5202:5200"
+    networks:
+      - snoozenw
+    depends_on:
+      - mongo1
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST2}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/hosts:/etc/hosts:ro
+      - /opt/snooze/config:/etc/snooze/server:rw
+      - /opt/snooze/log:/var/log/snooze/server:rw
+  snooze3:
+    image: nexus.privatehost.com:8442/snoozeweb/snooze
+    environment:
+      - DATABASE_URL=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/snooze?replicaSet=rs0
+      - SNOOZE_CLUSTER=snooze1:5200,snooze2:5200,snooze3:5200
+    ports:
+      - "5203:5200"
+    networks:
+      - snoozenw
+    depends_on:
+      - mongo1
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+           - node.hostname == ${HOST3}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/hosts:/etc/hosts:ro
+      - /opt/snooze/config:/etc/snooze/server:rw
+      - /opt/snooze/log:/var/log/snooze/server:rw
+  syslog1:
+    image: nexus.privatehost.com:8442/orgname/snoozeweb/syslog:latest
+    environment:
+      - SNOOZE_SERVER=snooze1
+    ports:
+      - 1515:1514/tcp
+      - 1515:1514/udp
+    networks:
+      - snoozenw
+    depends_on:
+      - snooze1
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST1}
+  syslog2:
+    image: nexus.privatehost.com:8442/orgname/snoozeweb/syslog:latest
+    environment:
+      - SNOOZE_SERVER=snooze2
+    ports:
+      - 1516:1514/tcp
+      - 1516:1514/udp
+    networks:
+      - snoozenw
+    depends_on:
+      - snooze2
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST2}
+  syslog3:
+    image: nexus.privatehost.com:8442/orgname/snoozeweb/syslog:latest
+    environment:
+      - SNOOZE_SERVER=snooze3
+    ports:
+      - 1517:1514/tcp
+      - 1517:1514/udp
+    networks:
+      - snoozenw
+    depends_on:
+      - snooze3
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST3}
+  snmptrap1:
+    image: nexus.privatehost.com:8442/orgname/snoozeweb/snmptrap:latest
+    environment:
+      - SNOOZE_SERVER=snooze1
+    ports:
+      - 1164:1163/tcp
+      - 1164:1163/udp
+    networks:
+      - snoozenw
+    depends_on:
+      - snooze1
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST1}
+  snmptrap2:
+    image: nexus.privatehost.com:8442/orgname/snoozeweb/snmptrap:latest
+    environment:
+      - SNOOZE_SERVER=snooze2
+    ports:
+      - 1165:1163/tcp
+      - 1165:1163/udp
+    networks:
+      - snoozenw
+    depends_on:
+      - snooze2
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST2}
+  snmptrap3:
+    image: nexus.privatehost.com:8442/orgname/snoozeweb/snmptrap:latest
+    environment:
+      - SNOOZE_SERVER=snooze3
+    ports:
+      - 1166:1163/tcp
+      - 1166:1163/udp
+    networks:
+      - snoozenw
+    depends_on:
+      - snooze3
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST3}
+  mongo1:
+    image: nexus.privatehost.com:8442/mongo:6.0.11
+    networks:
+      - snoozenw
+    command: ["--replSet", "rs0"]
+    ports:
+      - 27018:27017/tcp
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST1}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/snooze/mongodb:/data/db:rw
+  mongo2:
+    image: nexus.privatehost.com:8442/mongo:6.0.11
+    networks:
+      - snoozenw
+    command: ["--replSet", "rs0"]
+    ports:
+      - 27019:27017/tcp
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST2}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/snooze/mongodb:/data/db:rw
+  mongo3:
+    image: nexus.privatehost.com:8442/mongo:6.0.11
+    networks:
+      - snoozenw
+    command: ["--replSet", "rs0"]
+    ports:
+      - 27020:27017/tcp
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOST3}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/hosts:/etc/hosts:ro
+      - /opt/snooze/mongodb:/data/db:rw
+
+networks:
+  snoozenw:
